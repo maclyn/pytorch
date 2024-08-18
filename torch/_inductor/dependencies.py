@@ -172,7 +172,7 @@ class MemoryDep(Dep):
         new_reordered_sizes = stride_reorder(sizes)
         new_reordered_var_names = stride_reorder(var_names)
 
-        new_simplified_sizes, reindex, prune = V.graph.sizevars._simplify_loops(
+        new_simplified_sizes, reindex, _ = V.graph.sizevars._simplify_loops(
             new_reordered_var_names,
             new_reordered_sizes,
             index_prevent_reordering(
@@ -461,10 +461,9 @@ class _RecordLoadStoreInner(V.MockHandler):  # type: ignore[name-defined]
         # Try to further simplify the indexes even if simplify_loops didn't
         # convert it to the simplest form because of the interference from
         # different indexing formulas.
-        free_symbols = index.free_symbols
         index_vars = [*var_ranges.keys()]
         sizes = tuple(var_ranges.values())  # type: ignore[assignment]
-        new_sizes, reindex, prune = V.graph.sizevars._simplify_loops(
+        new_sizes, reindex, _ = V.graph.sizevars._simplify_loops(
             index_vars,
             sizes,
             index_prevent_reordering([index], index_vars, sizes),

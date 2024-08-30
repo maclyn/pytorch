@@ -73,4 +73,4 @@ else
     raise "unsupported platform #{options[:platform]}"
 end
 
-exec "xcodebuild clean build -project #{xcodeproj_path} -alltargets -sdk #{sdk} -configuration Release -arch #{arch}"
+exec "xcodebuild clean build -project #{xcodeproj_path} -alltargets -sdk #{sdk} -configuration Release -arch #{arch} -verbose"

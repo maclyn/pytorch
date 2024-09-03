@@ -17,3 +17,8 @@ def _get_sharding_prop_cache_info():
     return (
         DTensor._op_dispatcher.sharding_propagator.propagate_op_sharding.cache_info()  # type:ignore[attr-defined]
     )
+
+
+# Set namespace for exposed private names
+CommDebugMode.__module__ = "torch.distributed.tensor.debug"
+visualize_sharding.__module__ = "torch.distributed.tensor.debug"

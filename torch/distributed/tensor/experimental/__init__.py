@@ -17,3 +17,9 @@ def implicit_replication():
         yield
     finally:
         DTensor._op_dispatcher._allow_implicit_replication = False
+
+
+# Set namespace for exposed private names
+implicit_replication.__module__ = "torch.distributed.tensor.experimental"
+local_map.__module__ = "torch.distributed.tensor.experimental"
+register_sharding.__module__ = "torch.distributed.tensor.experimental"

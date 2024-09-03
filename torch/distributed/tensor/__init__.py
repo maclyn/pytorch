@@ -53,3 +53,15 @@ if DTensor not in _optim_foreach_supported_types:
 
 if DTensor not in _util_foreach_supported_types:
     _util_foreach_supported_types.append(DTensor)
+
+
+# Set namespace for exposed private names
+DTensor.__module__ = "torch.distributed.tensor"
+distribute_tensor.__module__ = "torch.distributed.tensor"
+distribute_module.__module__ = "torch.distributed.tensor"
+ones.__module__ = "torch.distributed.tensor"
+empty.__module__ = "torch.distributed.tensor"
+full.__module__ = "torch.distributed.tensor"
+rand.__module__ = "torch.distributed.tensor"
+randn.__module__ = "torch.distributed.tensor"
+zeros.__module__ = "torch.distributed.tensor"

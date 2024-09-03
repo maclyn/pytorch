@@ -9,8 +9,8 @@ from typing import cast, Dict, List, Optional, Sequence, Tuple, TYPE_CHECKING
 import torch
 import torch.distributed as dist
 import torch.distributed.tensor._api as dtensor
-from torch.distributed.tensor._dtensor_spec import DTensorSpec, TensorMeta
 import torch.distributed.tensor._random as random
+from torch.distributed.tensor._dtensor_spec import DTensorSpec, TensorMeta
 from torch.distributed.tensor._op_schema import (
     _is_inplace_op,
     _is_out_variant_op,
@@ -18,6 +18,7 @@ from torch.distributed.tensor._op_schema import (
     OpSchema,
     OutputSpecType,
 )
+from torch.distributed.tensor._random import is_rng_supported_mesh
 from torch.distributed.tensor._redistribute import redistribute_local_tensor
 from torch.distributed.tensor._sharding_prop import ShardingPropagator
 from torch.distributed.tensor._tp_conv import (
@@ -26,7 +27,6 @@ from torch.distributed.tensor._tp_conv import (
 )
 from torch.distributed.tensor._utils import try_find_mesh_from_args
 from torch.distributed.tensor.placement_types import Replicate
-from torch.distributed.tensor._random import is_rng_supported_mesh
 
 
 if TYPE_CHECKING:

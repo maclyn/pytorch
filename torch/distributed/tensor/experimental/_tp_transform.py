@@ -15,11 +15,7 @@ from torch.distributed.tensor._op_schema import (
 )
 from torch.distributed.tensor._redistribute import redistribute_local_tensor
 from torch.distributed.tensor.parallel.style import ColwiseParallel, ParallelStyle
-from torch.distributed.tensor.placement_types import (
-    Placement,
-    Replicate,
-    Shard,
-)
+from torch.distributed.tensor.placement_types import Placement, Replicate, Shard
 from torch.export import ExportedProgram
 from torch.export.exported_program import ExportGraphSignature
 from torch.fx import GraphModule

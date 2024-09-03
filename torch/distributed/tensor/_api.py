@@ -12,6 +12,10 @@ import torch.nn as nn
 from torch.distributed.device_mesh import _mesh_resources, DeviceMesh
 from torch.distributed.tensor._collective_utils import check_tensor_meta, mesh_broadcast
 from torch.distributed.tensor._dtensor_spec import DTensorSpec, TensorMeta
+from torch.distributed.tensor._random import (
+    is_rng_supported_mesh,
+    OffsetBasedRNGTracker,
+)
 from torch.distributed.tensor._redistribute import (
     Redistribute,
     redistribute_local_tensor,
@@ -27,7 +31,6 @@ from torch.distributed.tensor.placement_types import (
     Replicate,
     Shard,
 )
-from torch.distributed.tensor._random import is_rng_supported_mesh, OffsetBasedRNGTracker
 
 
 __all__ = [

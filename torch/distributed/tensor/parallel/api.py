@@ -6,12 +6,12 @@ import torch
 import torch.distributed.tensor._random as random
 import torch.nn as nn
 from torch.distributed.tensor import DeviceMesh
-from torch.distributed.tensor.parallel._utils import _validate_tp_mesh_dim
-from torch.distributed.tensor.parallel.style import ParallelStyle
 from torch.distributed.tensor._random import (
     is_rng_supported_mesh,
     TensorParallelRNGTracker,
 )
+from torch.distributed.tensor.parallel._utils import _validate_tp_mesh_dim
+from torch.distributed.tensor.parallel.style import ParallelStyle
 
 
 __all__ = [

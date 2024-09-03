@@ -26,7 +26,7 @@ class Placement:
     ``DeviceMesh``. ``Placement` and ``DeviceMesh`` together could describe the DTensor Layout.
     It is the base class of the three main DTensor Placement types: ``Shard``, ``Replicate``,
     and ``Partial``.
-    
+
     This class is not meant to be used directly, mainly served as a typing stub.
     """
 

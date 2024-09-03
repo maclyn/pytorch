@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, cast, List, NamedTuple, Tuple, Optional
+from typing import Any, cast, List, NamedTuple, Optional, Tuple
 
 import torch
 from torch.distributed.device_mesh import DeviceMesh
@@ -29,12 +29,12 @@ class DTensorSpec:
     # tensor meta will only be set during sharding propagation
     tensor_meta: Optional[TensorMeta] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not isinstance(self.placements, tuple):
             self.placements = tuple(self.placements)
         self._hash: Optional[int] = None
 
-    def __setattr__(self, attr: str, value: Any):
+    def __setattr__(self, attr: str, value: Any) -> None:
         super().__setattr__(attr, value)
         # Make sure to recompute the hash in case any of the hashed attributes
         # change (though we do not expect `mesh` or `placements` to change)
@@ -250,13 +250,13 @@ class DTensorSpec:
 
         return cls(mesh, tuple(placements), tensor_meta=tensor_meta)
 
-    def is_replicated(self):
+    def is_replicated(self) -> bool:
         """
         return True if the current DTensorSpec replicates on all mesh dims (devices)
         """
         return all(placement.is_replicate() for placement in self.placements)
 
-    def is_sharded(self):
+    def is_sharded(self) -> bool:
         """
         return True if the current DTensorSpec is sharded on any mesh dims (devices)
         """

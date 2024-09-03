@@ -23,11 +23,7 @@ from torch.distributed.tensor._ops.utils import (
     map_placements_after_broadcast,
     register_op_strategy,
 )
-from torch.distributed.tensor.placement_types import (
-    Placement,
-    Replicate,
-    Shard,
-)
+from torch.distributed.tensor.placement_types import Placement, Replicate, Shard
 
 
 aten = torch.ops.aten

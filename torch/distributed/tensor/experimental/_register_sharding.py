@@ -23,8 +23,8 @@ __all__ = ["register_sharding"]
 
 def register_sharding(op: Union[OpOverload, List[OpOverload]]):
     """
-    ``register_sharding`` is an experimental API that allows users to register sharding
-    strategies for an operator when the tensor inputs and outputs are :class:`DTensor`s.
+    :meth:`register_sharding` is an experimental API that allows users to register sharding
+    strategies for an operator when the tensor inputs and outputs are DTensor.
     It can be useful when: (1) there doesn't exist a default sharding strategy for ``op``,
     e.g. when ``op`` is a custom operator that is not supported by :class:`DTensor`; (2)
     when users would like to overwrite default sharding strategies of existing operators.

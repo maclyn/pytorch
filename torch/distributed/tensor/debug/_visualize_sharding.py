@@ -135,10 +135,9 @@ def _compute_local_shape_and_global_offset(
 
 def visualize_sharding(dtensor, header=""):
     """
-    Visualizes sharding in 1D-2D dtensors
-    Requires tabulate, install with `pip install tabulate`
+    Visualizes sharding in the terminal for :class:`DTensor` that are 1D or 2D.
 
-    note: no sharding info will be printed for empty tensors
+    .. note:: This requires the ``tabulate`` package. No sharding info will be printed for empty tensors
     """
     if dtensor.numel() == 0:  # we do not print for empty dtensors
         return

@@ -64,6 +64,7 @@ please refer to the `DeviceMesh recipe <https://pytorch.org/tutorials/recipes/di
 
 DTensor Placement Types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automodule:: torch.distributed.tensor.placement_types
 .. currentmodule:: torch.distributed.tensor.placement_types
 
 DTensor supports the following types of :class:`Placement` on each :class:`DeviceMesh` dimension:
@@ -142,7 +143,47 @@ specifying the :class:`DeviceMesh` and :class:`Placement` for the :class:`DTenso
 .. autofunction:: randn
 
 
+Debugging
+---------------------------------------
+
+.. automodule:: torch.distributed.tensor.debug
+.. currentmodule:: torch.distributed.tensor.debug
+
+Logging
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When launching the program, you can turn on additional logging using the `TORCH_LOGS` environment variable from
+[`torch._logging`](https://pytorch.org/docs/main/logging.html#module-torch._logging):
+
+* `TORCH_LOGS=+dtensor` will display `logging.DEBUG` messages and all levels above it.
+* `TORCH_LOGS=dtensor` will display `logging.INFO` messages and above.
+* `TORCH_LOGS=-dtensor` will display `logging.WARNING` messages and above.
+
+Debugging Tools
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To debug the program that applied DTensor, and understand more details about what collectives happened under the
+hood, DTensor provides a :class:`CommDebugMode`:
+
+.. autoclass:: CommDebugMode
+
+To visualize the sharding of a DTensor that have less than 3 dimensions, DTensor provides :meth:`visualize_sharding`:
+
+.. autofunction:: visualize_sharding
+
+
+Experimental Features
+---------------------------------------
+
+``DTensor`` also provides a set of experimental features. These features are either in prototyping stage, or the basic
+functionality is done and but looking for user feedbacks. Please submit a issue to PyTorch if you have feedbacks to
+these features.
+
+.. automodule:: torch.distributed.tensor.experimental
+.. currentmodule:: torch.distributed.tensor.experimental
+
+.. autofunction:: local_map
+.. autofunction:: register_sharding
+
+
 .. modules that are missing docs, add the doc later when necessary
 .. py:module:: torch.distributed.tensor.device_mesh
-.. py:module:: torch.distributed.tensor.experimental
-.. py:module:: torch.distributed.tensor.debug

@@ -222,12 +222,11 @@ class _CommModeModuleTracker(ModTracker):
 
 class CommDebugMode(TorchDispatchMode):
     """
-    ``CommDebugMode`` is a context manager that counts the number of
+    :class:`CommDebugMode` is a context manager that counts the number of
     functional collectives within its context. It does this using a
     ``TorchDispatchMode``.
 
-    NOTE: this mode only works for functional collective atm and the
-    distributed_c10d collectives are not supported yet.
+    .. note: Not all collectives are supported yet.
 
     Example usage
 

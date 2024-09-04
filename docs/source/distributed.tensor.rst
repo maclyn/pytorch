@@ -165,6 +165,7 @@ To debug the program that applied DTensor, and understand more details about wha
 hood, DTensor provides a :class:`CommDebugMode`:
 
 .. autoclass:: CommDebugMode
+    :members:
 
 To visualize the sharding of a DTensor that have less than 3 dimensions, DTensor provides :meth:`visualize_sharding`:
 

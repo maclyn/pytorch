@@ -265,7 +265,7 @@ class CommDebugMode(TorchDispatchMode):
             include_module_data,
             include_ops,
             include_trivial_ops,
-        ) = self.set_noise_parameters(noise_level)
+        ) = self._set_noise_parameters(noise_level)
 
         # recursively builds json data
         def add_json_information(json_dict, fqn):
@@ -320,7 +320,9 @@ class CommDebugMode(TorchDispatchMode):
                         forward_operations,
                         backward_operations,
                         checkpointing_operations,
-                    ) = self.get_operations_list(self.comm_module_operation_counts[fqn])
+                    ) = self._get_operations_list(
+                        self.comm_module_operation_counts[fqn]
+                    )
 
             # remove all operations who don't have DTensor inputs
             if not include_ops:
@@ -413,7 +415,7 @@ class CommDebugMode(TorchDispatchMode):
             include_module_data,
             include_ops,
             include_trivial_ops,
-        ) = self.set_noise_parameters(noise_level)
+        ) = self._set_noise_parameters(noise_level)
 
         table = ""
         for fqn in self.advanced_module_tracker.module_helper_dict:
@@ -468,7 +470,9 @@ class CommDebugMode(TorchDispatchMode):
                         forward_operations,
                         backward_operations,
                         checkpointing_operations,
-                    ) = self.get_operations_list(self.comm_module_operation_counts[fqn])
+                    ) = self._get_operations_list(
+                        self.comm_module_operation_counts[fqn]
+                    )
 
             def add_tracing_information(table, collectives_dict, operation_list):
                 """
@@ -543,7 +547,7 @@ class CommDebugMode(TorchDispatchMode):
 
         return table
 
-    def get_operations_list(self, module_operation_counts):
+    def _get_operations_list(self, module_operation_counts):
         forward_operations = [
             op for op in module_operation_counts["operations_list"] if not op["is_bw"]
         ]
@@ -570,12 +574,6 @@ class CommDebugMode(TorchDispatchMode):
             Dict[Any, int]: The communication counts as a dictionary.
         """
         return self.comm_counts
-
-    def get_comm_module_counts(self) -> Dict[str, Dict[Any, int]]:
-        """
-        Returns the communication counts at a module level as a dictionary.
-        """
-        return self.comm_module_counts
 
     def get_parameter_info(self) -> Dict[str, Dict[str, Any]]:
         return self.advanced_module_tracker.module_parameters_dict
@@ -612,13 +610,7 @@ class CommDebugMode(TorchDispatchMode):
         with open(file_name, "w") as log_file:
             log_file.write(table)
 
-    def print_paramater_info(self):
-        self.advanced_module_tracker.print_paramater_info()
-
-    def print_sharding_info(self):
-        self.advanced_module_tracker.print_sharding_info()
-
-    def set_noise_parameters(self, noise_level):
+    def _set_noise_parameters(self, noise_level):
         """
         sets variables controlling what information displays based on noise level
         """

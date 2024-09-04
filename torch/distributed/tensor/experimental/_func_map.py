@@ -117,7 +117,6 @@ def local_map(
         >>> Y_dt = local_mm_allreduce_forward(device_mesh, W_dt, X_dt)  # apply local_mm_allreduce_forward to DTensors
 
     .. note:: This API is currently experimental and subject to change
-
     """
 
     def wrapped(*args, **kwargs):

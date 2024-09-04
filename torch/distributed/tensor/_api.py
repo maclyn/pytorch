@@ -631,7 +631,7 @@ def distribute_tensor(
     same. The ``tensor`` to distribute is the logical or "global" tensor, and the API would use
     the ``tensor`` from first rank of the DeviceMesh dimension as the source of truth to perserve
     the single-device semantic. If you want to construct a DTensor in the middle of the Autograd
-    computation, please use ``DTensor.from_local`` instead.
+    computation, please use :meth:`DTensor.from_local` instead.
 
     Args:
         tensor (torch.Tensor): torch.Tensor to be distributed. Note that if you
@@ -653,7 +653,7 @@ def distribute_tensor(
 
     .. note::
         When initialize the DeviceMesh with the ``xla`` device_type, ``distribute_tensor``
-        return `XLAShardedTensor` instead. see [link](https://github.com/pytorch/pytorch/issues/92909)
+        return `XLAShardedTensor` instead. see `this issue <https://github.com/pytorch/pytorch/issues/92909>`__
         for more details. The XLA integration is experimental and subject to change.
     """
 
@@ -796,7 +796,8 @@ def distribute_module(
 
     .. note::
         When initialize the DeviceMesh with the ``xla`` device_type, ``distribute_module``
-        return nn.Module with PyTorch/XLA SPMD annotated parameters. See [link](https://github.com/pytorch/pytorch/issues/92909)
+        return nn.Module with PyTorch/XLA SPMD annotated parameters. See
+        `this issue <https://github.com/pytorch/pytorch/issues/92909>`__
         for more details. The XLA integration is experimental and subject to change.
 
     """

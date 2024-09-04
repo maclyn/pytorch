@@ -236,7 +236,7 @@ class CommDebugMode(TorchDispatchMode):
         comm_mode = CommDebugMode()
         with comm_mode:
             mod.sum().backward()
-
+        print(comm_mode.get_comm_counts())
     """
 
     def __init__(self):

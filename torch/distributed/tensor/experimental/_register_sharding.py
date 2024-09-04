@@ -62,6 +62,8 @@ def register_sharding(op: Union[OpOverload, List[OpOverload]]):
         >>>             acceptable_shardings.append(all_sharded)
         >>>
         >>>     return acceptable_shardings
+
+    .. note:: This API is currently experimental and subject to change
     """
 
     def custom_strategy(

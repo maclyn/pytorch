@@ -166,6 +166,7 @@ hood, DTensor provides a :class:`CommDebugMode`:
 
 .. autoclass:: CommDebugMode
     :members:
+    :undoc-members:
 
 To visualize the sharding of a DTensor that have less than 3 dimensions, DTensor provides :meth:`visualize_sharding`:
 

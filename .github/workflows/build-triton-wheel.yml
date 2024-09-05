@@ -212,7 +212,7 @@ jobs:
   build-conda:
     name: "Build Triton Conda"
     needs: get-label-type
-    runs-on: "${{ needs.get-label-type.outputs.label-type }}linux.2xlarge]"
+    runs-on: "${{ needs.get-label-type.outputs.label-type }}linux.2xlarge"
     strategy:
       fail-fast: false
       matrix:

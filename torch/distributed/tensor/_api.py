@@ -1066,8 +1066,8 @@ def full(  # type: ignore[no-untyped-def]
     placements: Optional[Sequence[Placement]] = None,
 ) -> DTensor:
     """
-    Returns a :class:`DTensor` filled with ``fill_value``. The scalar value type should match
-        ``device_mesh.device_type``.
+    Returns a :class:`DTensor` filled with ``fill_value`` according to ``device_mesh`` and
+    ``placements``, with the shape defined by the argument ``size``.
 
     Args:
         size (int...): a sequence of integers defining the shape of the output :class:`DTensor`.
@@ -1112,8 +1112,8 @@ def rand(  # type: ignore[no-untyped-def]
 ) -> DTensor:
     """
     Returns a :class:`DTensor` filled with random numbers from a uniform distribution
-        on the interval ``[0, 1)``. The shape of the tensor is defined by the variable
-        argument ``size``.
+    on the interval ``[0, 1)``. The shape of the tensor is defined by the variable
+    argument ``size``.
 
     Args:
         size (int...): a sequence of integers defining the shape of the output :class:`DTensor`.
@@ -1156,8 +1156,8 @@ def randn(  # type: ignore[no-untyped-def]
 ) -> DTensor:
     """
     Returns a :class:`DTensor` filled with random numbers from a normal distribution
-        with mean 0 and variance 1. The shape of the tensor is defined by the variable
-        argument ``size``.
+    with mean 0 and variance 1. The shape of the tensor is defined by the variable
+    argument ``size``.
 
     Args:
         size (int...): a sequence of integers defining the shape of the output :class:`DTensor`.

@@ -98,7 +98,7 @@ There're three ways to construct a :class:`DTensor`:
   * :meth:`DTensor.from_local` creates a :class:`DTensor` from a local ``torch.Tensor`` on each rank, which can
     be used to create :class:`DTensor` from a non-leaf ``torch.Tensor`` s (i.e. intermediate activation
     tensors during forward/backward).
-  * DTensor provides dedicated tensor factory methods (e.g. :meth:`empty`, :meth:`ones`, :meth:`randn`, etc.)
+  * DTensor provides dedicated tensor factory functions (e.g. :meth:`empty`, :meth:`ones`, :meth:`randn`, etc.)
     to allow different :class:`DTensor` creations by directly specifying the :class:`DeviceMesh` and
     :class:`Placement`. Compare to :meth:`distribute_tensor`, this could directly materializing the sharded memory
     on device, instead of performing sharding after initializing the logical Tensor memory.

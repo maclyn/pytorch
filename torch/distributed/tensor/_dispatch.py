@@ -26,7 +26,7 @@ from torch.distributed.tensor._tp_conv import (
     convolution_handler,
 )
 from torch.distributed.tensor._utils import try_find_mesh_from_args
-from torch.distributed.tensor.placement_types import Replicate
+from torch.distributed.tensor.placement_types import Partial, Placement, Replicate
 
 
 if TYPE_CHECKING:
@@ -67,6 +67,46 @@ def is_same_size_handler(
     return lhs.shape == rhs.shape
 
 
+def found_inf_reduce_handler(
+    op_call: torch._ops.OpOverload,
+    args: Tuple[object, ...],
+    kwargs: Dict[str, object],
+) -> None:
+    op_info = dtensor.DTensor._op_dispatcher.unwrap_to_op_info(op_call, args, kwargs)
+    local_tensor_args = pytree.tree_unflatten(
+        cast(List[object], op_info.local_args), op_info.args_tree_spec
+    )
+    local_tensor_args = cast(Tuple[object, ...], local_tensor_args)
+    local_results = op_call(*local_tensor_args, **op_info.local_kwargs)
+
+    grad_dtensor = cast(list[dtensor.DTensor], args[0])[0]
+    grad_placements = grad_dtensor.placements
+    mesh = grad_dtensor.device_mesh
+
+    found_inf_placements: list[Placement] = []
+    for placement in grad_placements:
+        if isinstance(placement, Replicate):
+            found_inf_placements.append(placement)
+        else:
+            found_inf_placements.append(Partial("max"))
+
+    target_tensor = cast(torch.Tensor, args[1])
+    spec = DTensorSpec(
+        mesh=mesh,
+        placements=tuple(found_inf_placements),
+        tensor_meta=TensorMeta(
+            shape=target_tensor.size(),
+            stride=target_tensor.stride(),
+            dtype=target_tensor.dtype,
+        ),
+    )
+    found_inf_dtensor = dtensor.DTensor(
+        local_tensor=target_tensor, spec=spec, requires_grad=False
+    )
+    found_inf = found_inf_dtensor.full_tensor()
+    target_tensor.copy_(found_inf)
+
+
 class OpDispatcher:
     """
     Op dispatching class instance to handle args/kwargs pre-processing (un-wrapping), sharding
@@ -100,6 +140,7 @@ class OpDispatcher:
             aten.is_same_size.default: is_same_size_handler,
             aten.convolution.default: convolution_handler,
             aten.convolution_backward.default: convolution_backward_handler,
+            aten._amp_foreach_non_finite_check_and_unscale_.default: found_inf_reduce_handler,
         }
 
         # This flag is used internally to control whether we treat the torch.Tensor(non-DTensor)

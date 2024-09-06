@@ -2,7 +2,7 @@
 import itertools
 import logging
 import typing
-from collections import Counter
+from collections import Counter, defaultdict
 from typing import Any, Dict, List, Set, Union
 
 import torch
@@ -437,6 +437,7 @@ def joint_graph_passes(graph: torch.fx.GraphModule):
     Run FX transformations on the joint forwards+backwards graph.
     """
     lazy_init()
+
     count = 0
     if config.joint_custom_pre_pass is not None:
         with GraphTransformObserver(

@@ -32,7 +32,10 @@ from torch.multiprocessing.reductions import StorageWeakRef
 from torch.utils._python_dispatch import is_traceable_wrapper_subclass
 
 from .. import config
-from .collect_metadata_analysis import run_functionalized_fw_and_collect_metadata
+from .collect_metadata_analysis import (
+    _tensor_to_memory_format,
+    run_functionalized_fw_and_collect_metadata,
+)
 from .functional_utils import gen_alias_from_base
 from .input_output_analysis import (
     compute_overlapping_inputs,
@@ -1438,21 +1441,28 @@ class AutogradLazyBackwardCompileInfo:
 # No need to make it into an actual CompilerWrapper because it doesn't fit the abstract as cleanly
 class AOTDispatchAutograd:
     @staticmethod
-    def _force_contiguous(x):
+    def coerce_runtime_tangent_tracing_memory_format(x, memory_format):
         if not isinstance(x, torch.Tensor):
             return x
-        x = x.contiguous()
+
+        x = _tensor_to_memory_format(x, memory_format)
+
         if not is_traceable_wrapper_subclass(x):
             return x
-        for attr in x.__tensor_flatten__()[0]:  # type: ignore[attr-defined]
+        for i, attr in enumerate(x.__tensor_flatten__()[0]):  # type: ignore[attr-defined]
             elem = getattr(x, attr)
-            if not elem.is_contiguous():
-                setattr(x, attr, elem.contiguous())
+            setattr(
+                x,
+                attr,
+                AOTDispatchAutograd.coerce_runtime_tangent_tracing_memory_format(
+                    elem, memory_format[i]
+                ),
+            )
         return x
 
     # See Note [Tangents must be contiguous, Part 2]
     @staticmethod
-    def coerce_runtime_tangent(x, metadata):
+    def coerce_runtime_subclass_tangent(x, metadata):
         if not isinstance(x, torch.Tensor):
             return x
         if not is_traceable_wrapper_subclass(x):
@@ -1854,7 +1864,7 @@ To fix this, your tensor subclass must implement the dunder method __force_to_sa
                     assert CompiledFunction.metadata.traced_tangent_metas is not None
                     all_args = [
                         (
-                            AOTDispatchAutograd.coerce_runtime_tangent(
+                            AOTDispatchAutograd.coerce_runtime_subclass_tangent(
                                 t,
                                 CompiledFunction.metadata.traced_tangent_metas[
                                     i - tangents_start_idx
@@ -1873,11 +1883,18 @@ To fix this, your tensor subclass must implement the dunder method __force_to_sa
                     )
                     tangents_end_idx = tangents_start_idx + len_tangents
 
-                # Make the tangents contiguous. Note that we must do this after subclass desugaring
-                # because inputs to inductor have to be contiguous
+                assert (
+                    CompiledFunction.metadata.traced_tangent_memory_formats is not None
+                )
+                flat_traced_tangent_memory_formats = torch.utils._pytree.tree_leaves(
+                    CompiledFunction.metadata.traced_tangent_memory_formats
+                )
                 all_args = [
                     (
-                        AOTDispatchAutograd._force_contiguous(t)
+                        AOTDispatchAutograd.coerce_runtime_tangent_tracing_memory_format(
+                            t,
+                            flat_traced_tangent_memory_formats[i - tangents_start_idx],
+                        )
                         if (tangents_start_idx <= i < tangents_end_idx)
                         else t
                     )

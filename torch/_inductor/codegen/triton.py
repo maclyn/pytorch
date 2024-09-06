@@ -2823,17 +2823,21 @@ class TritonKernel(SIMDKernel):
             )
 
         grid = wrapper.generate_default_grid(name, grid)
-        wrapper.generate_kernel_call(
-            name,
-            call_args,
-            grid,
-            current_device.index,
-            cuda=True,
-            triton=True,
-            arg_types=arg_types,
-            grid_fn=self._get_grid_fn(),
-            triton_meta=self.triton_meta,
-        )
+        # add debug printer code for triton kernel calls at (jit) inductor level
+        debug_printer_manager = V.graph.wrapper_code.debug_printer
+        debug_printer_manager.set_printer_args(call_args, name, arg_types, None)
+        with debug_printer_manager:
+            wrapper.generate_kernel_call(
+                name,
+                call_args,
+                grid,
+                current_device.index,
+                cuda=True,
+                triton=True,
+                arg_types=arg_types,
+                grid_fn=self._get_grid_fn(),
+                triton_meta=self.triton_meta,
+            )
 
         if self.args.workspace_arg is not None:
             wrapper.writeline(wrapper.make_free_by_names(["workspace"]))

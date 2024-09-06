@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import functools
 import logging
+import os
 from enum import Enum
 from typing import List, Optional
 
@@ -136,8 +137,23 @@ class DebugPrinterManager:
                     # TODO: add non-abi compatible mode debug printing info
                     pass
             else:
-                # currently, not cpp wrapper codegen mode not supported.
-                pass
+                cwd = os.getcwd()
+                if not os.path.exists(cwd + "/tmp/jit_inductor/"):
+                    log.info(
+                        "Creating tmp/jit_inductor/ directory to save inductor intermediate tensor values."
+                    )  # noqa: G004
+                    os.makedirs(cwd + "/tmp/jit_inductor/")
+                # Save the model to the directory
+                saved_path = (
+                    cwd
+                    + "/tmp/jit_inductor/"
+                    + f"{launch_prefix}_{kernel_name}_{arg}.pt"
+                )
+                log.info(
+                    f"Saved intermediate tensor {arg} for {kernel_name} to {saved_path}"  # noqa: G004
+                )
+                line = f"torch.save({arg}, '{saved_path}')"
+                V.graph.wrapper_code.writeline(line)
 
     def codegen_intermediate_tensor_value_print(
         self,
@@ -171,5 +187,7 @@ class DebugPrinterManager:
                     # TODO: add non-abi compatible mode debug printing info
                     pass
             else:
-                line = f"print('{launch_prefix} - {kernel_name} - {arg}', {arg})"
+                line = (
+                    f"print('inductor: {launch_prefix} - {kernel_name} - {arg}', {arg})"
+                )
                 V.graph.wrapper_code.writeline(line)

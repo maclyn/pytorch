@@ -76,8 +76,8 @@ class CppWrapperCpu(WrapperCodeGen):
         call_args,
         grid=None,
         device_index=None,
-        cuda=True,
-        triton=True,
+        cuda=False,
+        triton=False,
         arg_types=None,
         raw_args=None,
         grid_fn: str = "grid",
@@ -87,47 +87,25 @@ class CppWrapperCpu(WrapperCodeGen):
     ):
         """
         Generates kernel call code.
-
-        cuda: Defines whether the backend is GPU. Otherwise the backend is CPU.
-
-        triton: Defines whether the GPU backend uses Triton for codegen.
-                Otherwise it uses the CUDA language for codegen.
-                Only valid when cuda == True.
         """
-        if cuda:
-            return super().generate_kernel_call(
-                kernel_name,
-                call_args,
-                grid,
-                device_index,
-                cuda,
-                triton,
-                arg_types,
-                raw_args,
-                grid_fn,
-                triton_meta,
-                autotune_configs,
-                grid_extra_kwargs,
-            )
+        assert not cuda, "CppWrapperCpu.geneerate_kernel_call does not support cuda"
+
+        if config.abi_compatible:
+            assert arg_types is not None and len(call_args) == len(
+                arg_types
+            ), "Mismatch call_args and arg_types in generate_kernel_call"
+            new_args = []
+            for idx, arg in enumerate(call_args):
+                if "*" in arg_types[idx]:
+                    var_name = f"var_{next(self.arg_var_id)}"
+                    self.writeline(f"auto* {var_name} = get_data_ptr_wrapper({arg});")
+                    new_args.append(f"({arg_types[idx]})({var_name})")
+                else:
+                    # arg is a scalar
+                    new_args.append(arg)
+            self.writeline(self.wrap_kernel_call(kernel_name, new_args))
         else:
-            if config.abi_compatible:
-                assert arg_types is not None and len(call_args) == len(
-                    arg_types
-                ), "Mismatch call_args and arg_types in generate_kernel_call"
-                new_args = []
-                for idx, arg in enumerate(call_args):
-                    if "*" in arg_types[idx]:
-                        var_name = f"var_{next(self.arg_var_id)}"
-                        self.writeline(
-                            f"auto* {var_name} = get_data_ptr_wrapper({arg});"
-                        )
-                        new_args.append(f"({arg_types[idx]})({var_name})")
-                    else:
-                        # arg is a scalar
-                        new_args.append(arg)
-                self.writeline(self.wrap_kernel_call(kernel_name, new_args))
-            else:
-                self.writeline(self.wrap_kernel_call(kernel_name, call_args))
+            self.writeline(self.wrap_kernel_call(kernel_name, call_args))
 
     def write_constant(self, name, hashed):
         # include a hash so our code cache gives different constants different files
@@ -921,9 +899,18 @@ class CppWrapperCpu(WrapperCodeGen):
         self.prefix = cached_dtypes_buffer
 
     def define_kernel(
-        self, name: str, kernel: str, metadata: Optional[str] = None, cuda=False
+        self,
+        kernel_name: str,
+        kernel_body: str,
+        metadata: Optional[str] = None,
+        cuda=False,
     ):
-        self.header.splice(f"\n{kernel}\n")
+        if cuda:
+            # Call the Python wrapper codegen to create the autotune code block
+            super().define_kernel(kernel_name, kernel_body, metadata, cuda)
+        else:
+            # No autotune for cpu kernels, simply write out the kernel body as a function
+            self.header.splice(f"\n{kernel_body}\n")
 
     def codegen_scalar_to_tensor(self, output: str):
         name = f"scalar_to_tensor_{next(self.scalar_to_tensor_id)}"
@@ -1494,9 +1481,6 @@ class CppWrapperCpu(WrapperCodeGen):
         self.wrapper_call.writeline(
             'RECORD_FUNCTION("inductor_wrapper_call", c10::ArrayRef<c10::IValue>());'
         )
-
-    def write_triton_header_once(self):
-        pass
 
     def generate_start_graph(self):
         pass

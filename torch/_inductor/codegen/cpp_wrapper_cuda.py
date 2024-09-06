@@ -78,6 +78,11 @@ class DeferredCudaDefaultGrid:
         self.grid_callable = grid_callable
         self.grid_extra_kwargs = grid_extra_kwargs
 
+    def __iter__(self):
+        # DeferredCudaDefaultGrid can be passed to the base class, WrapperCodeGen,
+        # to genrete the autotune code block, and thus we need this iterator
+        return iter(self.grid)
+
     def _process_grid(self, grid: Union[List[Any], Tuple[Any, ...]]):
         if isinstance(grid, (list, tuple)):
             return [self._process_grid(e) for e in grid]
@@ -194,12 +199,6 @@ class CppWrapperCuda(CppWrapperCpu):
         )
         return name
 
-    def define_kernel(
-        self, name: str, kernel: str, metadata: Optional[str] = None, cuda=True
-    ):
-        if not cuda:
-            return super().define_kernel(name, kernel, metadata, cuda)
-
     def generate(self, is_inference):
         self.prefix.writeline("\n")
         if not V.graph.aot_mode:
@@ -213,6 +212,19 @@ class CppWrapperCuda(CppWrapperCpu):
             self.prefix.writeline("\n")
         return super().generate(is_inference)
 
+    def define_kernel(
+        self,
+        kernel_name: str,
+        kernel_body: str,
+        metadata: Optional[str] = None,
+        cuda=True,
+    ):
+        """
+        Override the default value of argument 'cuda' to True here. define_kernel can still be
+        called with cuda=False because of a mix of cpu kernels and triton kernels.
+        """
+        return super().define_kernel(kernel_name, kernel_body, metadata, cuda)
+
     def generate_user_defined_triton_kernel(
         self,
         kernel_name: str,
@@ -222,20 +234,32 @@ class CppWrapperCuda(CppWrapperCpu):
         triton_meta,
         constexprs,
     ):
+        # Call parent class to create the autotune code block
+        super().generate_user_defined_triton_kernel(
+            kernel_name,
+            raw_args,
+            grid,
+            configs,
+            triton_meta,
+            constexprs,
+            codegen_autotune_only=True,
+        )
+
         # in C++ wrapper, we don't pass constexpr args, as they don't
         # get added as parameters to the PTX code compiled from the
         # user-defined Triton kernel (only non-constexpr args do)
         raw_args = [
             raw_arg for i, raw_arg in enumerate(raw_args) if i not in constexprs
         ]
-        args = [self.val_to_arg_str(v) for v in raw_args]
         arg_types = [
             arg.get_dtype() if hasattr(arg, "get_dtype") else type(arg)
             for arg in raw_args
         ]
+
+        # Call self.generate_kernel_call to generate the real kernel call in cpp
         self.generate_kernel_call(
             kernel_name,
-            args,
+            [self.val_to_arg_str(v) for v in raw_args],
             arg_types=arg_types,
             raw_args=raw_args,
             grid=grid,
@@ -325,7 +349,7 @@ class CppWrapperCuda(CppWrapperCpu):
     def generate_default_grid(
         self,
         kernel_name: str,
-        grid: List[Any],
+        grid_args: List[Any],
         cuda: bool = True,
         grid_callable: Optional[Callable[..., Any]] = None,
         **grid_extra_kwargs,
@@ -336,10 +360,12 @@ class CppWrapperCuda(CppWrapperCpu):
         to read kernel config after autotune, it is done in a deferred way
         using DeferredCudaDefaultGrid.
         """
-        if not cuda:
-            return grid
+        # Call parent class to create the default grid
+        super().generate_default_grid(
+            kernel_name, grid_args, cuda, grid_callable, **grid_extra_kwargs
+        )
         return DeferredCudaDefaultGrid(
-            kernel_name, grid, grid_callable, **grid_extra_kwargs
+            kernel_name, grid_args, grid_callable, **grid_extra_kwargs
         )
 
     def generate_kernel_call(
@@ -357,10 +383,10 @@ class CppWrapperCuda(CppWrapperCpu):
         autotune_configs=None,
         grid_extra_kwargs="",
     ):
-        assert arg_types is not None and len(call_args) == len(
-            arg_types
-        ), "call_args and arg_types do not match"
-
+        """
+        Override the default value of argument 'cuda' to True here. generate_kernel_call can still be
+        called with cuda=False because of a mix of cpu kernels and triton kernels.
+        """
         if not cuda:
             # Even in CppWrapperCuda, we may see cpp kernels
             return super().generate_kernel_call(
@@ -377,6 +403,22 @@ class CppWrapperCuda(CppWrapperCpu):
                 autotune_configs,
                 grid_extra_kwargs,
             )
+
+        # Call parent class to create the autotune code block
+        self.generate_kernel_call_python(
+            kernel_name,
+            call_args,
+            grid,
+            device_index,
+            cuda,
+            triton,
+            arg_types,
+            raw_args,
+            grid_fn,
+            triton_meta,
+            autotune_configs,
+            grid_extra_kwargs,
+        )
 
         device_index, call_args = self.prepare_triton_kernel_call(
             device_index, call_args

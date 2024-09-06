@@ -1672,21 +1672,27 @@ class GraphLowering(torch.fx.Interpreter):
 
     def codegen_with_cpp_wrapper(self) -> Tuple[str, List[Tuple[int, Node]]]:
         """
-        For CPU, the cpp wrapper codegen is done in one pass.
-        For GPU, the cpp wrapper codegen is done in two steps: JIT-compile the model with python
-        wrapper code and run it to generate autotuned kernel binaries in the first pass; and then
-        generate cpp wrapper code and compile it to a dynamic library in the second pass.
+        For GPU, Triton kernels are autotuned and stored as cubin files
         """
         if "cuda" in self.device_types:
-            # first pass
-            self.cpp_wrapper = False
-            # Although triton.store_cubin was OrderedSet in compile_fx, the backward pass didn't pick
-            # that up. In theory it should work by only setting triton.store_cubin to True here,
-            # but that will cause a problem when use_runtime_constant_folding is OrderedSet.
-            with config.patch({"triton.store_cubin": True}):
-                compiled = self.compile_to_module().call
-
-            if not config.triton.autotune_at_compile_time:
+            if config.triton.autotune_at_compile_time:
+                # If autotune_at_compile_time is True, we can do the codegen in one-pass
+                # FIXME: once autotune_at_compile_time is stable, we can delete the else branch
+                with config.patch(
+                    {
+                        "triton.store_cubin": True,
+                        "triton.autotune_at_compile_time": True,
+                    }
+                ):
+                    return self.codegen()
+            else:
+                # first pass
+                self.cpp_wrapper = False
+                # Although triton.store_cubin was OrderedSet in compile_fx, the backward pass didn't pick
+                # that up. In theory it should work by only setting triton.store_cubin to True here,
+                # but that will cause a problem when use_runtime_constant_folding is OrderedSet.
+                with config.patch({"triton.store_cubin": True}):
+                    compiled = self.compile_to_module().call
 
                 def materialize(
                     x: Union[torch.SymInt, torch.SymFloat, torch.Tensor]
@@ -1759,15 +1765,15 @@ class GraphLowering(torch.fx.Interpreter):
                     compiled(real_inputs)
                 del real_inputs
 
-            # second pass
-            self.cpp_wrapper = True
-            self.removed_buffers.clear()
-            self.removed_operations.clear()
-            self.inplaced_to_remove.clear()
-            V.graph.sizevars.precomputed_replacements.clear()
-            V.graph.sizevars.inv_precomputed_replacements.clear()
-            with config.patch({"triton.autotune_at_compile_time": False}):
-                return self.codegen()
+                # second pass
+                self.cpp_wrapper = True
+                self.removed_buffers.clear()
+                self.removed_operations.clear()
+                self.inplaced_to_remove.clear()
+                V.graph.sizevars.precomputed_replacements.clear()
+                V.graph.sizevars.inv_precomputed_replacements.clear()
+                with config.patch({"triton.autotune_at_compile_time": False}):
+                    return self.codegen()
         else:
             # cpu
             return self.codegen()

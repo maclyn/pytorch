@@ -7,7 +7,13 @@ from typing import cast, List
 import torch
 import torch.distributed as dist
 from torch import rand, randn, Tensor
-from torch.distributed._tensor import DeviceMesh, distribute_tensor, Replicate, Shard
+from torch.distributed._tensor import (
+    DeviceMesh,
+    distribute_tensor,
+    init_device_mesh,
+    Replicate,
+    Shard,
+)
 from torch.distributed._tensor.placement_types import Placement
 from torch.distributed.tensor._ops._view_ops import (
     Broadcast,
